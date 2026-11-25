@@ -5,6 +5,7 @@
 !dist/extension.js
 !dist/webview.js
 !dist/profiler.js
+!dist/mcp-server.js
 !media/**
 !schemas/**
 !bin/analyzer/**

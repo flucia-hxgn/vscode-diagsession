@@ -50,6 +50,35 @@ and the profiler agree on what your code is:
 `*` and `?` are wildcards; `std` matches `std::*` and `std<...>`. A report uses the file of the workspace folder that
 holds the capture (else of the first folder) and follows its edits. Without the file, the built-in rules apply.
 
+## Opening captures from an agent (MCP)
+
+An agent that produced a capture (Claude Code in a terminal, Claude Desktop) can open it in VS Code, in the window
+that has the project open, and read a summary of it. Run **DiagSession: Set Up MCP Server for Claude…** once and
+pick the agent:
+
+- **Claude Code**: copies a `claude mcp add --scope user …` command to run in a terminal.
+- **Claude Desktop**: adds the server to `claude_desktop_config.json`; restart Claude Desktop.
+- **Copy the JSON configuration**: for any other MCP client.
+
+The server runs with VS Code's own Node, so nothing else has to be installed. Its tools:
+
+| Tool | What it does |
+|---|---|
+| `open_diagsession` | Opens a `.diagsession` / `.etl` (absolute `path`) as a report. |
+| `get_profile_summary` | Hot path, top functions by self and total time, time per module and thread, as JSON. |
+| `list_captures` | The files of the **Captures** view. |
+| `list_windows` | The VS Code windows that can open a report. |
+
+The window is chosen so that the report finds the sources, the symbol paths and `.vscode/jmc.json` of the project.
+In order: the `workspace` argument (the project folder), the workspace folder that holds the capture, the window
+whose integrated terminal the agent runs in, the window whose workspace holds the agent's working directory, the
+only window. With several windows and none of these, the tool answers with the list of windows rather than guess.
+A folder that is not open in VS Code is not opened for you.
+
+Each window listens on the loopback interface, behind a token kept in `~/.vscode-diagsession` (with the copy of the
+server the agents start). `diagsession.mcp.enabled` turns it off. The capture has to be on the machine VS Code runs
+on: an agent on another machine must copy it there first.
+
 ## Recording a profile
 
 The **Profiler** icon in the activity bar opens a view that records CPU captures with `VSDiagnostics.exe`. It needs

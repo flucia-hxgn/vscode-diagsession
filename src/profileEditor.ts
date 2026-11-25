@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
-import { analyze } from './analyzer';
+import { analyze, type AnalyzeRequest } from './analyzer';
 import type { JustMyCodeConfig } from './justMyCode';
 import { SourceAnnotations } from './sourceAnnotations';
 import type { FromWebview, ToWebview } from '../shared/protocol';
@@ -36,6 +36,21 @@ export async function rememberProcess(context: vscode.ExtensionContext, file: st
   await context.workspaceState.update(choiceKey(file), { ...prev, pid });
 }
 
+/** What to analyse for a capture: the process and symbols chosen in its report, else the settings. */
+export function analysisRequest(
+  context: vscode.ExtensionContext,
+  file: string,
+  choice: Choice = context.workspaceState.get<Choice>(choiceKey(file)) ?? {},
+): AnalyzeRequest {
+  return {
+    file,
+    pid: choice.pid,
+    msSymbols: choice.msSymbols ?? vscode.workspace.getConfiguration('diagsession').get<boolean>('useMicrosoftSymbolServer', false),
+    localSymbols: localSymbolsOnly(),
+    loadSymbols: choice.loadSymbols ?? [],
+  };
+}
+
 class ProfileDocument implements vscode.CustomDocument {
   constructor(readonly uri: vscode.Uri) {}
   dispose(): void {}
@@ -66,18 +81,10 @@ export class ProfileEditorProvider implements vscode.CustomReadonlyEditorProvide
     const load = async (choice: Choice) => {
       running?.cancel();
       const cts = (running = new vscode.CancellationTokenSource());
-      const msSymbols =
-        choice.msSymbols ?? vscode.workspace.getConfiguration('diagsession').get<boolean>('useMicrosoftSymbolServer', false);
       try {
         const result = await analyze(
           this.context,
-          {
-            file: document.uri.fsPath,
-            pid: choice.pid,
-            msSymbols,
-            localSymbols: localSymbolsOnly(),
-            loadSymbols: choice.loadSymbols ?? [],
-          },
+          analysisRequest(this.context, document.uri.fsPath, choice),
           (text) => post({ type: 'progress', text }),
           cts.token,
         );

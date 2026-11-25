@@ -9,5 +9,5 @@
     "types": ["node", "vscode"],
     "outDir": "out"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "mcp/**/*.ts"]
 }

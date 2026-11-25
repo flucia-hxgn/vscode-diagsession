@@ -21,7 +21,9 @@
     "cpu usage"
   ],
   "main": "./dist/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -83,6 +85,11 @@
       }
     },
     "commands": [
+      {
+        "command": "diagsession.mcp.setup",
+        "title": "Set Up MCP Server for Claude…",
+        "category": "DiagSession"
+      },
       {
         "command": "diagsession.clearSourceAnnotations",
         "title": "Clear Profiler Source Annotations",
@@ -354,6 +361,11 @@
           "default": "",
           "markdownDescription": "Path of `VSDiagnostics.exe`. Empty finds it in the newest Visual Studio install (`Team Tools\\DiagnosticsHub\\Collector`)."
         },
+        "diagsession.mcp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Let an agent (Claude Code, Claude Desktop) open and summarise captures in this window through the MCP server set up by **DiagSession: Set Up MCP Server for Claude…**. The window listens on the loopback interface only, behind a token. Takes effect after a window reload."
+        },
         "diagsession.analyzerPath": {
           "type": "string",
           "default": "",
@@ -368,6 +380,7 @@
     "watch": "node esbuild.mjs --watch",
     "build": "npm run build:analyzer && npm run build:ts",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p webview",
+    "test": "npm run build:ts && node --test test/mcp.test.js",
     "package": "npm run build && vsce package --no-dependencies --skip-license --allow-missing-repository --no-rewrite-relative-links",
     "vscode:prepublish": "npm run build"
   },

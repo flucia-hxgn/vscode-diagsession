@@ -9,6 +9,7 @@ import { Profiler } from './profiler/profiler';
 import { ProfilerViewProvider } from './profiler/profilerView';
 import { CaptureItem, CapturesProvider } from './profiler/capturesView';
 import { pickProcess } from './profiler/targets';
+import { setupMcp, startMcp } from './mcp';
 
 export function activate(context: vscode.ExtensionContext): { annotations: SourceAnnotations; profiler: Profiler } {
   const annotations = new SourceAnnotations();
@@ -51,6 +52,7 @@ export function activate(context: vscode.ExtensionContext): { annotations: Sourc
       }
     }),
 
+    vscode.commands.registerCommand('diagsession.mcp.setup', guarded(setupMcp)),
     vscode.commands.registerCommand('diagsession.clearSourceAnnotations', () => annotations.clear()),
     vscode.commands.registerCommand('diagsession.clearCache', async () => {
       // Only the analyzer's cache: the default capture folder lives next to it.
@@ -126,6 +128,14 @@ export function activate(context: vscode.ExtensionContext): { annotations: Sourc
       }),
     ),
   );
+
+  // Lets an agent open captures in this window (see mcp/server.ts). The reports work without it.
+  if (vscode.workspace.getConfiguration('diagsession').get<boolean>('mcp.enabled', true)) {
+    startMcp(context, { openReport, captures }).then(
+      (bridge) => context.subscriptions.push(bridge),
+      (e) => console.error('DiagSession: the MCP bridge did not start:', e),
+    );
+  }
   return { annotations, profiler }; // for integration tests
 }
 
