@@ -130,7 +130,8 @@ export async function setupMcp(): Promise<void> {
   if (!pick) return;
 
   if (pick.id === 'code') {
-    const command = `claude mcp add --scope user --env ELECTRON_RUN_AS_NODE=1 ${SERVER_NAME} -- ${[server.command, ...server.args].map(quote).join(' ')}`;
+    // The name comes before --env: the option takes several values and would swallow it.
+    const command = `claude mcp add --scope user ${SERVER_NAME} --env ELECTRON_RUN_AS_NODE=1 -- ${[server.command, ...server.args].map(quote).join(' ')}`;
     await vscode.env.clipboard.writeText(command);
     const run = await vscode.window.showInformationMessage('Copied the "claude mcp add" command. Run it once in a terminal.', 'Run in Terminal');
     if (run) {
